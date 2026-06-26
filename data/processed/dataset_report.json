@@ -1,0 +1,12 @@
+{
+    "rows": 4,
+    "columns": 29,
+    "numeric_columns": 21,
+    "categorical_columns": 8,
+    "missing_values": 0,
+    "duplicate_rows": 0,
+    "ml_readiness": 100.0,
+    "dataset_health": 74.88,
+    "tensor_exists": true,
+    "ready_for_training": true
+}

@@ -1,0 +1,4 @@
+character,average_positive,average_negative,average_neutral,average_compound,average_confidence,total_dialogues
+NARUTO,0.0,0.0,1.0,0.0,0.0,2
+SAKURA,0.0,0.0,1.0,0.0,0.0,1
+SASUKE,0.0,0.0,1.0,0.0,0.0,1
