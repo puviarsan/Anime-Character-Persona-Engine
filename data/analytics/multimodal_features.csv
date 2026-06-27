@@ -1,0 +1,5 @@
+character,filename,vector_length,mean,std,min,max,embedding_path
+naruto,naruto1_face_1,519,0.9418,1.2878,0.0,24.0,D:\Anime-Character-Persona-Engine\Anime_Character_Persona_Engine\data\processed\fused\naruto\naruto1_face_1.npy
+naruto,naruto2_face_1,519,1.0383,1.3375,0.0,24.0,D:\Anime-Character-Persona-Engine\Anime_Character_Persona_Engine\data\processed\fused\naruto\naruto2_face_1.npy
+sakura,sakura1_face_1,519,0.9437,0.8797,0.0,5.5385,D:\Anime-Character-Persona-Engine\Anime_Character_Persona_Engine\data\processed\fused\sakura\sakura1_face_1.npy
+sasuke,sasuke1_face_1,519,0.8652,1.0959,-0.6,18.0,D:\Anime-Character-Persona-Engine\Anime_Character_Persona_Engine\data\processed\fused\sasuke\sasuke1_face_1.npy
