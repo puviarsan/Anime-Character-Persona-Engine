@@ -188,6 +188,26 @@ MODEL_DIR = PROJECT_ROOT / "models"
 
 YOLO_FACE_MODEL = MODEL_DIR / "yolov8n-face.pt"
 
+# ==========================================================
+# Embedding Directories
+# ==========================================================
+
+EMBEDDINGS_DIR = PROCESSED_DATA_DIR / "embeddings"
+
+EMBEDDINGS_DIR.mkdir(
+    parents=True,
+    exist_ok=True
+)
+
+# ==========================================================
+# Analytics Files
+# ==========================================================
+
+RESNET_FEATURES_FILE = (
+    ANALYTICS_DATA_DIR /
+    "resnet_features.csv"
+)
+
 
 # ==========================================================
 # Reports
