@@ -8,14 +8,22 @@ Phase   : Phase 2
 
 Description
 -----------
-Performs sentiment analysis on anime dialogues
-using NLTK VADER.
+Hybrid Anime Sentiment Analyzer
+
+Uses:
+1. VADER Sentiment Analysis
+2. Anime Emotion Dictionary
+3. Hybrid Sentiment Score
+
+Author : Puviarasan
 ==========================================================
 """
 
 from __future__ import annotations
 
 import logging
+
+from typing import Dict
 
 import pandas as pd
 
@@ -35,8 +43,14 @@ from config.paths import (
 
 )
 
+from src.nlp.anime_dictionary import (
+
+    ANIME_EMOTION_DICTIONARY
+
+)
+
 # ==========================================================
-# Download VADER (only first time)
+# Download VADER
 # ==========================================================
 
 try:
@@ -76,8 +90,7 @@ logger = logging.getLogger(__name__)
 class SentimentAnalyzer:
 
     """
-    Performs sentiment analysis
-    using VADER.
+    Hybrid Anime Sentiment Analyzer
     """
 
     def __init__(self):
@@ -113,7 +126,65 @@ class SentimentAnalyzer:
         return self.dataframe
 
     # ======================================================
-    # Analyze One Dialogue
+    # Anime Dictionary Score
+    # ======================================================
+
+    def anime_dictionary_score(
+
+        self,
+
+        dialogue: str
+
+    ) -> float:
+
+        words = str(
+
+            dialogue
+
+        ).lower().split()
+
+        total_score = 0.0
+
+        matched_words = 0
+
+        for word in words:
+
+            word = word.strip(
+
+                ".,!?;:\"'()[]{}"
+
+            )
+
+            if word in ANIME_EMOTION_DICTIONARY:
+
+                total_score += (
+
+                    ANIME_EMOTION_DICTIONARY[
+
+                        word
+
+                    ]
+
+                )
+
+                matched_words += 1
+
+        if matched_words == 0:
+
+            return 0.0
+
+        return round(
+
+            total_score /
+
+            matched_words,
+
+            3
+
+        )
+
+    # ======================================================
+    # Hybrid Sentiment
     # ======================================================
 
     def analyze_dialogue(
@@ -122,15 +193,67 @@ class SentimentAnalyzer:
 
         dialogue: str
 
-    ):
+    ) -> Dict:
 
-        scores = self.analyzer.polarity_scores(
+        dialogue = str(dialogue)
 
-            str(dialogue)
+        vader = self.analyzer.polarity_scores(
+
+            dialogue
 
         )
 
-        return scores
+        anime_score = self.anime_dictionary_score(
+
+            dialogue
+
+        )
+
+        hybrid = (
+
+            0.70 *
+
+            vader["compound"]
+
+            +
+
+            0.30 *
+
+            anime_score
+
+        )
+
+        hybrid = max(
+
+            -1,
+
+            min(
+
+                hybrid,
+
+                1
+
+            )
+
+        )
+
+        vader["anime_score"] = round(
+
+            anime_score,
+
+            3
+
+        )
+
+        vader["hybrid_score"] = round(
+
+            hybrid,
+
+            3
+
+        )
+
+        return vader
 
     # ======================================================
     # Confidence Score
@@ -140,13 +263,13 @@ class SentimentAnalyzer:
 
     def confidence_score(
 
-        compound
+        score
 
     ):
 
         return round(
 
-            abs(compound) * 100,
+            abs(score) * 100,
 
             2
 
@@ -160,15 +283,15 @@ class SentimentAnalyzer:
 
     def sentiment_category(
 
-        compound
+        score
 
     ):
 
-        if compound >= 0.50:
+        if score >= 0.50:
 
             return "Positive"
 
-        elif compound <= -0.50:
+        elif score <= -0.50:
 
             return "Negative"
 
@@ -190,12 +313,18 @@ class SentimentAnalyzer:
         neutral_scores = []
         compound_scores = []
 
+        anime_scores = []
+        hybrid_scores = []
+
         confidence_scores = []
+
         sentiment_labels = []
 
         for dialogue in self.dataframe["clean_dialogue"]:
 
-            scores = self.analyze_dialogue(dialogue)
+            scores = self.analyze_dialogue(
+                dialogue
+            )
 
             positive_scores.append(
                 scores["pos"]
@@ -213,11 +342,19 @@ class SentimentAnalyzer:
                 scores["compound"]
             )
 
+            anime_scores.append(
+                scores["anime_score"]
+            )
+
+            hybrid_scores.append(
+                scores["hybrid_score"]
+            )
+
             confidence_scores.append(
 
                 self.confidence_score(
 
-                    scores["compound"]
+                    scores["hybrid_score"]
 
                 )
 
@@ -227,7 +364,7 @@ class SentimentAnalyzer:
 
                 self.sentiment_category(
 
-                    scores["compound"]
+                    scores["hybrid_score"]
 
                 )
 
@@ -241,12 +378,16 @@ class SentimentAnalyzer:
 
         self.dataframe["compound"] = compound_scores
 
+        self.dataframe["anime_score"] = anime_scores
+
+        self.dataframe["hybrid_score"] = hybrid_scores
+
         self.dataframe["confidence"] = confidence_scores
 
         self.dataframe["sentiment"] = sentiment_labels
 
         logger.info(
-            "Sentiment analysis completed."
+            "Hybrid sentiment analysis completed."
         )
 
         return self.dataframe
@@ -259,18 +400,34 @@ class SentimentAnalyzer:
 
         row = self.dataframe.loc[
 
-            self.dataframe["compound"].idxmax()
+            self.dataframe["hybrid_score"]
+
+            .idxmax()
 
         ]
 
         print("\n")
+
         print("=" * 70)
+
         print("MOST POSITIVE DIALOGUE")
+
         print("=" * 70)
-        print(f"Character : {row['character']}")
-        print(f"Dialogue  : {row['dialogue']}")
-        print(f"Compound  : {row['compound']}")
+
+        print(
+            f"Character : {row['character']}"
+        )
+
+        print(
+            f"Dialogue  : {row['dialogue']}"
+        )
+
+        print(
+            f"Hybrid Score : {row['hybrid_score']}"
+        )
+
         print("=" * 70)
+
         print()
 
         return row
@@ -283,24 +440,40 @@ class SentimentAnalyzer:
 
         row = self.dataframe.loc[
 
-            self.dataframe["compound"].idxmin()
+            self.dataframe["hybrid_score"]
+
+            .idxmin()
 
         ]
 
         print("\n")
+
         print("=" * 70)
+
         print("MOST NEGATIVE DIALOGUE")
+
         print("=" * 70)
-        print(f"Character : {row['character']}")
-        print(f"Dialogue  : {row['dialogue']}")
-        print(f"Compound  : {row['compound']}")
+
+        print(
+            f"Character : {row['character']}"
+        )
+
+        print(
+            f"Dialogue  : {row['dialogue']}"
+        )
+
+        print(
+            f"Hybrid Score : {row['hybrid_score']}"
+        )
+
         print("=" * 70)
+
         print()
 
         return row
 
     # ======================================================
-    # Emotion Distribution
+    # Sentiment Distribution
     # ======================================================
 
     def emotion_distribution(self):
@@ -324,168 +497,17 @@ class SentimentAnalyzer:
         ]
 
         print("\n")
+
         print("=" * 70)
+
         print("SENTIMENT DISTRIBUTION")
+
         print("=" * 70)
+
         print(distribution)
+
         print("=" * 70)
-        print()
 
-        return distribution
-        # ======================================================
-    # Analyze Entire Dataset
-    # ======================================================
-
-    def analyze_dataset(self):
-
-        logger.info(
-            "Analyzing dialogue sentiments..."
-        )
-
-        positive_scores = []
-        negative_scores = []
-        neutral_scores = []
-        compound_scores = []
-
-        confidence_scores = []
-        sentiment_labels = []
-
-        for dialogue in self.dataframe["clean_dialogue"]:
-
-            scores = self.analyze_dialogue(dialogue)
-
-            positive_scores.append(
-                scores["pos"]
-            )
-
-            negative_scores.append(
-                scores["neg"]
-            )
-
-            neutral_scores.append(
-                scores["neu"]
-            )
-
-            compound_scores.append(
-                scores["compound"]
-            )
-
-            confidence_scores.append(
-
-                self.confidence_score(
-
-                    scores["compound"]
-
-                )
-
-            )
-
-            sentiment_labels.append(
-
-                self.sentiment_category(
-
-                    scores["compound"]
-
-                )
-
-            )
-
-        self.dataframe["positive"] = positive_scores
-
-        self.dataframe["negative"] = negative_scores
-
-        self.dataframe["neutral"] = neutral_scores
-
-        self.dataframe["compound"] = compound_scores
-
-        self.dataframe["confidence"] = confidence_scores
-
-        self.dataframe["sentiment"] = sentiment_labels
-
-        logger.info(
-            "Sentiment analysis completed."
-        )
-
-        return self.dataframe
-
-    # ======================================================
-    # Most Positive Dialogue
-    # ======================================================
-
-    def most_positive_dialogue(self):
-
-        row = self.dataframe.loc[
-
-            self.dataframe["compound"].idxmax()
-
-        ]
-
-        print("\n")
-        print("=" * 70)
-        print("MOST POSITIVE DIALOGUE")
-        print("=" * 70)
-        print(f"Character : {row['character']}")
-        print(f"Dialogue  : {row['dialogue']}")
-        print(f"Compound  : {row['compound']}")
-        print("=" * 70)
-        print()
-
-        return row
-
-    # ======================================================
-    # Most Negative Dialogue
-    # ======================================================
-
-    def most_negative_dialogue(self):
-
-        row = self.dataframe.loc[
-
-            self.dataframe["compound"].idxmin()
-
-        ]
-
-        print("\n")
-        print("=" * 70)
-        print("MOST NEGATIVE DIALOGUE")
-        print("=" * 70)
-        print(f"Character : {row['character']}")
-        print(f"Dialogue  : {row['dialogue']}")
-        print(f"Compound  : {row['compound']}")
-        print("=" * 70)
-        print()
-
-        return row
-
-    # ======================================================
-    # Emotion Distribution
-    # ======================================================
-
-    def emotion_distribution(self):
-
-        distribution = (
-
-            self.dataframe["sentiment"]
-
-            .value_counts()
-
-            .reset_index()
-
-        )
-
-        distribution.columns = [
-
-            "Sentiment",
-
-            "Count"
-
-        ]
-
-        print("\n")
-        print("=" * 70)
-        print("SENTIMENT DISTRIBUTION")
-        print("=" * 70)
-        print(distribution)
-        print("=" * 70)
         print()
 
         return distribution
@@ -515,6 +537,10 @@ class SentimentAnalyzer:
 
                 average_compound=("compound", "mean"),
 
+                average_anime_score=("anime_score", "mean"),
+
+                average_hybrid_score=("hybrid_score", "mean"),
+
                 average_confidence=("confidence", "mean"),
 
                 total_dialogues=("character", "count")
@@ -529,7 +555,7 @@ class SentimentAnalyzer:
 
         print("\n")
         print("=" * 70)
-        print("CHARACTER SENTIMENT")
+        print("CHARACTER SENTIMENT ANALYTICS")
         print("=" * 70)
         print(analytics)
         print("=" * 70)
@@ -551,7 +577,7 @@ class SentimentAnalyzer:
 
             self.dataframe
 
-            .groupby("character")["compound"]
+            .groupby("character")["hybrid_score"]
 
             .std()
 
@@ -565,7 +591,7 @@ class SentimentAnalyzer:
 
             "character",
 
-            "compound_std"
+            "hybrid_std"
 
         ]
 
@@ -573,9 +599,19 @@ class SentimentAnalyzer:
 
             100 -
 
-            stability["compound_std"] * 100
+            (stability["hybrid_std"] * 100)
 
-        ).clip(lower=0).round(2)
+        )
+
+        stability["emotional_stability"] = (
+
+            stability["emotional_stability"]
+
+            .clip(lower=0)
+
+            .round(2)
+
+        )
 
         print("\n")
         print("=" * 70)
@@ -600,14 +636,12 @@ class SentimentAnalyzer:
         timeline = self.dataframe.copy()
 
         timeline = timeline.sort_values(
-
             "subtitle_id"
-
         )
 
-        timeline["rolling_compound"] = (
+        timeline["rolling_hybrid_score"] = (
 
-            timeline["compound"]
+            timeline["hybrid_score"]
 
             .rolling(
 
@@ -625,7 +659,7 @@ class SentimentAnalyzer:
 
         timeline["emotion_change"] = (
 
-            timeline["compound"]
+            timeline["hybrid_score"]
 
             .diff()
 
@@ -650,9 +684,9 @@ class SentimentAnalyzer:
 
                     "character",
 
-                    "compound",
+                    "hybrid_score",
 
-                    "rolling_compound",
+                    "rolling_hybrid_score",
 
                     "emotion_change"
 
@@ -668,12 +702,12 @@ class SentimentAnalyzer:
         return timeline
 
     # ======================================================
-    # Overall Sentiment Statistics
+    # Overall Statistics
     # ======================================================
 
     def sentiment_statistics(self):
 
-        stats = {
+        statistics = {
 
             "average_positive":
 
@@ -715,6 +749,26 @@ class SentimentAnalyzer:
 
                 ),
 
+            "average_anime_score":
+
+                round(
+
+                    self.dataframe["anime_score"].mean(),
+
+                    3
+
+                ),
+
+            "average_hybrid_score":
+
+                round(
+
+                    self.dataframe["hybrid_score"].mean(),
+
+                    3
+
+                ),
+
             "average_confidence":
 
                 round(
@@ -729,17 +783,17 @@ class SentimentAnalyzer:
 
         print("\n")
         print("=" * 70)
-        print("SENTIMENT STATISTICS")
+        print("HYBRID SENTIMENT STATISTICS")
         print("=" * 70)
 
-        for key, value in stats.items():
+        for key, value in statistics.items():
 
-            print(f"{key:25}: {value}")
+            print(f"{key:30}: {value}")
 
         print("=" * 70)
         print()
 
-        return stats
+        return statistics
         # ======================================================
     # Save Sentiment Results
     # ======================================================
@@ -809,7 +863,7 @@ class SentimentAnalyzer:
         )
 
     # ======================================================
-    # Pipeline Summary
+    # Summary
     # ======================================================
 
     def summary(self):
@@ -818,7 +872,7 @@ class SentimentAnalyzer:
 
         print("=" * 70)
 
-        print("SENTIMENT ANALYSIS SUMMARY")
+        print("HYBRID ANIME SENTIMENT SUMMARY")
 
         print("=" * 70)
 
@@ -836,20 +890,20 @@ class SentimentAnalyzer:
 
         print(
 
-            f"Average Compound: {round(self.dataframe['compound'].mean(),3)}"
+            f"Average Hybrid Score : {round(self.dataframe['hybrid_score'].mean(),3)}"
 
         )
 
         print(
 
-            f"Average Confidence: {round(self.dataframe['confidence'].mean(),2)}%"
+            f"Average Confidence : {round(self.dataframe['confidence'].mean(),2)}%"
 
         )
 
         print("=" * 70)
 
         print()
-    
+
 # ==========================================================
 # Main
 # ==========================================================
@@ -863,7 +917,7 @@ if __name__ == "__main__":
     )
 
     logger.info(
-        "Phase 2 - NLP Sentiment Analysis"
+        "Phase 2 - Hybrid Anime Sentiment Engine"
     )
 
     logger.info("=" * 70)
@@ -872,21 +926,21 @@ if __name__ == "__main__":
 
     try:
 
-        # ---------------------------------------------
+        # --------------------------------------------------
         # Load Dataset
-        # ---------------------------------------------
+        # --------------------------------------------------
 
         analyzer.load_dataset()
 
-        # ---------------------------------------------
-        # Analyze
-        # ---------------------------------------------
+        # --------------------------------------------------
+        # Hybrid Sentiment Analysis
+        # --------------------------------------------------
 
         analyzer.analyze_dataset()
 
-        # ---------------------------------------------
+        # --------------------------------------------------
         # Analytics
-        # ---------------------------------------------
+        # --------------------------------------------------
 
         analyzer.most_positive_dialogue()
 
@@ -902,9 +956,9 @@ if __name__ == "__main__":
 
         analyzer.sentiment_statistics()
 
-        # ---------------------------------------------
-        # Save
-        # ---------------------------------------------
+        # --------------------------------------------------
+        # Save Results
+        # --------------------------------------------------
 
         analyzer.save_sentiment_results()
 
@@ -917,7 +971,7 @@ if __name__ == "__main__":
         logger.info("=" * 70)
 
         logger.info(
-            "PHASE 2 MODULE COMPLETED SUCCESSFULLY"
+            "HYBRID SENTIMENT ENGINE COMPLETED"
         )
 
         logger.info("=" * 70)
