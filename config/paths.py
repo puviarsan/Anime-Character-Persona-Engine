@@ -166,6 +166,14 @@ MULTIMODAL_FEATURES_FILE = (
     "multimodal_features.csv"
 )
 # ==========================================================
+# Personality Classification
+# ==========================================================
+
+PERSONALITY_REPORT_FILE = (
+    ANALYTICS_DATA_DIR /
+    "personality_report.csv"
+)
+# ==========================================================
 # Vision Data
 # ==========================================================
 

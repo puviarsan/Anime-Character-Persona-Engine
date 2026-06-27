@@ -1,0 +1,5 @@
+character,filename,archetype,leadership,confidence,optimism,kindness,aggression,emotional_stability,intelligence,bravery,teamwork,discipline
+naruto,naruto1_face_1,Strategist,89.47,100.0,98.88,84.55,38.63,100.0,100.0,100.0,84.55,94.73
+naruto,naruto2_face_1,Hero,98.64,100.0,100.0,83.95,40.12,100.0,100.0,100.0,83.95,99.32
+sakura,sakura1_face_1,Strategist,89.65,99.69,99.08,89.44,26.39,100.0,91.17,85.21,89.44,94.83
+sasuke,sasuke1_face_1,Strategist,82.2,100.0,90.85,86.85,32.88,85.0,98.06,100.0,86.85,83.6
