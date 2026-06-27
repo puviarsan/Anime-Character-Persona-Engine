@@ -1,0 +1,5 @@
+character,filename,width,height,channels,face_id,x,y,area,center_x,center_y,confidence,cropped_face
+naruto,naruto1.jpg,101,93,3,1,87,113,9393,137,159,0.808,D:\Anime-Character-Persona-Engine\Anime_Character_Persona_Engine\data\processed\faces\naruto\naruto1_face_1.jpg
+naruto,naruto2.jpg,128,138,3,1,103,55,17664,167,124,0.847,D:\Anime-Character-Persona-Engine\Anime_Character_Persona_Engine\data\processed\faces\naruto\naruto2_face_1.jpg
+sakura,sakura1.jpg,121,152,3,1,87,38,18392,147,114,0.8,D:\Anime-Character-Persona-Engine\Anime_Character_Persona_Engine\data\processed\faces\sakura\sakura1_face_1.jpg
+sasuke,sasuke1.jpg,72,92,3,1,122,76,6624,158,122,0.858,D:\Anime-Character-Persona-Engine\Anime_Character_Persona_Engine\data\processed\faces\sasuke\sasuke1_face_1.jpg

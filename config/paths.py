@@ -125,10 +125,68 @@ EMOTION_TIMELINE_CSV = (
 )
 
 # ==========================================================
+# Vision Data
+# ==========================================================
+
+RAW_IMAGES_DIR = (
+
+    RAW_DATA_DIR /
+
+    "images"
+
+)
+
+IMAGE_EMBEDDINGS_DIR = (
+
+    PROCESSED_DATA_DIR /
+
+    "embeddings"
+
+)
+
+FACE_EMBEDDINGS_FILE = (
+
+    IMAGE_EMBEDDINGS_DIR /
+
+    "face_embeddings.csv"
+
+)
+
+RESNET_FEATURES_FILE = (
+
+    IMAGE_EMBEDDINGS_DIR /
+
+    "resnet_features.csv"
+
+)
+
+# ==========================================================
+# Face Detection
+# ==========================================================
+
+FACE_OUTPUT_DIR = (
+
+    PROCESSED_DATA_DIR /
+
+    "faces"
+
+)
+
+FACE_REPORT_FILE = (
+
+    ANALYTICS_DATA_DIR /
+
+    "face_detection_report.csv"
+
+)
+
+# ==========================================================
 # Models
 # ==========================================================
 
 MODEL_DIR = PROJECT_ROOT / "models"
+
+YOLO_FACE_MODEL = MODEL_DIR / "yolov8n-face.pt"
 
 
 # ==========================================================
